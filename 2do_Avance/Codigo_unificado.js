@@ -7,7 +7,7 @@ const rl = readline.createInterface({
 
 
 // ==================================================
-// PARTE DE LUZ - COCINA (Investigar: filter, find)
+// PARTE DE LUZ - COCINA (Investigar: filter y find)
 // ==================================================
 
 let productos = [];
