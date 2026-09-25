@@ -1,0 +1,474 @@
+const readline = require("readline");
+
+const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+});
+
+
+// ==================================================
+// BASE DE DATOS LOCAL
+// ==================================================
+
+let productos = [];
+let pedidos = [];
+
+
+// ==================================================
+// PARTE DE LUZ - COCINA
+// Investigar: Promesas, filter, find
+// ==================================================
+
+// Agregar producto con categoria y promocion
+function agregarProducto(nombre, precio, cantidad, categoria, promocion) {
+    let producto = {
+        nombre: nombre,
+        precio: precio,
+        cantidad: cantidad,
+        categoria: categoria,
+        promocion: promocion
+    };
+
+    productos.push(producto);
+    console.log("Producto agregado correctamente.");
+}
+
+// Mostrar productos de cocina
+function listarProductos() {
+    console.log("\n===== PRODUCTOS DE COCINA =====");
+
+    if (productos.length == 0) {
+        console.log("No hay productos.");
+    } else {
+        productos.forEach((producto, index) => {
+            console.log(
+                (index + 1) + ". " +
+                producto.nombre +
+                " - $" + producto.precio +
+                " - Cantidad: " + producto.cantidad +
+                " - Categoria: " + producto.categoria
+            );
+        });
+    }
+}
+
+// Promesa para simular la preparacion en cocina
+function prepararEnCocina(nombreProducto) {
+    return new Promise((resolve, reject) => {
+        // Simulacion de imprevistos según el nombre o condicion
+        if (nombreProducto.toLowerCase().includes("cancelar")) {
+            reject("Error en cocina");
+        } else if (nombreProducto.toLowerCase().includes("agotado")) {
+            reject("Falta ingrediente");
+        } else {
+            resolve("Pedido preparado con éxito");
+        }
+    });
+}
+
+// Búsquedas y filtros INTERACTIVOS desde la terminal (filter y find)
+function busquedasFiltrosTerminal() {
+    console.log(`
+===== BUSQUEDAS Y FILTROS =====
+1. Filtrar por Categoria
+2. Filtrar por Precio Maximo
+3. Buscar Producto por Nombre
+`);
+
+    rl.question("Selecciona el tipo de filtro: ", function(opcionFiltro) {
+        if (opcionFiltro === "1") {
+            rl.question("Ingresa la categoria a buscar (bebida/postre): ", function(cat) {
+                // Uso de filter() dinamico
+                let resultados = productos.filter(p => p.categoria.toLowerCase() === cat.toLowerCase().trim());
+                
+                console.log("\n-- RESULTADOS DE CATEGORIA: " + cat + " --");
+                if (resultados.length === 0) {
+                    console.log("No se encontraron productos en esa categoria.");
+                } else {
+                    resultados.forEach(p => console.log(p.nombre + " - $" + p.precio + " (Stock: " + p.cantidad + ")"));
+                }
+                preguntarContinuar();
+            });
+
+        } else if (opcionFiltro === "2") {
+            rl.question("Ingresa el precio maximo: ", function(precioMax) {
+                let limite = parseFloat(precioMax);
+                // Uso de filter() dinamico
+                let baratos = productos.filter(p => p.precio <= limite);
+
+                console.log("\n-- PRODUCTOS HASTA $" + limite + " --");
+                if (baratos.length === 0) {
+                    console.log("No hay productos dentro de ese rango de precio.");
+                } else {
+                    baratos.forEach(p => console.log(p.nombre + " - $" + p.precio));
+                }
+                preguntarContinuar();
+            });
+
+        } else if (opcionFiltro === "3") {
+            rl.question("Ingresa el nombre del producto a buscar: ", function(busqueda) {
+                // Uso de find() dinamico
+                let encontrado = productos.find(p => p.nombre.toLowerCase().includes(busqueda.toLowerCase().trim()));
+
+                console.log("\n-- RESULTADO DE BUSQUEDA --");
+                if (encontrado) {
+                    console.log("Encontrado: " + encontrado.nombre + " - $" + encontrado.precio + " | Categoria: " + encontrado.categoria);
+                } else {
+                    console.log("Producto no encontrado.");
+                }
+                preguntarContinuar();
+            });
+
+        } else {
+            console.log("Opcion invalida.");
+            preguntarContinuar();
+        }
+    });
+}
+
+// Editar producto
+function editarProducto(indice, nombre, precio, cantidad, categoria, promocion) {
+    if (indice >= 0 && indice < productos.length) {
+        productos[indice].nombre = nombre;
+        productos[indice].precio = precio;
+        productos[indice].cantidad = cantidad;
+        productos[indice].categoria = categoria;
+        productos[indice].promocion = promocion;
+
+        console.log("Producto editado correctamente.");
+    } else {
+        console.log("Producto no encontrado.");
+    }
+}
+
+// Eliminar producto
+function eliminarProducto(indice) {
+    if (indice >= 0 && indice < productos.length) {
+        productos.splice(indice, 1);
+        console.log("Producto eliminado correctamente.");
+    } else {
+        console.log("Producto no encontrado.");
+    }
+}
+
+
+// Productos iniciales
+agregarProducto("Cafe Americano", 35, 20, "bebida", false);
+agregarProducto("Cappuccino", 55, 15, "bebida", true);
+agregarProducto("Frappe", 65, 10, "bebida", false);
+agregarProducto("Pastel", 50, 8, "postre", true);
+agregarProducto("Galletas", 25, 30, "postre", false);
+
+
+// ==================================================
+// PARTE DE PALOMA - CLIENTE
+// Investigar: setTimeout, asincronía, map, forEach
+// ==================================================
+
+// Consultar productos usando map() y forEach()
+function consultarProductos() {
+    console.log("\n===== MENU DEL CLIENTE =====");
+
+    let menuFormateado = productos.map(p => p.nombre + " - $" + p.precio);
+    menuFormateado.forEach((item, index) => {
+        console.log((index + 1) + ". " + item);
+    });
+
+    console.log("\n===== PRODUCTOS DISPONIBLES =====");
+    productos.forEach(p => {
+        if (p.cantidad > 0) {
+            console.log(p.nombre + " - Disponibles: " + p.cantidad);
+        }
+    });
+}
+
+// Mostrar promociones
+function verPromociones() {
+    console.log("\n===== PROMOCIONES =====");
+    productos.forEach(p => {
+        if (p.promocion) {
+            console.log("OFERTA: " + p.nombre + " a solo $" + p.precio);
+        }
+    });
+}
+
+// Simular la trayectoria asincrona del pedido con setTimeout y Promesas
+function seguimientoAsincronoPedido(nombreProducto, callbackCaja) {
+    console.log("\n--- PROCESANDO PEDIDO ---");
+    console.log("Estado: Pedido recibido");
+
+    // Asincronia 1
+    setTimeout(() => {
+        console.log("Estado: Preparando........");
+
+        // Asincronia 2
+        setTimeout(() => {
+            console.log("Estado: Empacando........");
+
+            // Evaluacion con Promesa de Cocina
+            setTimeout(() => {
+                prepararEnCocina(nombreProducto)
+                    .then((mensajeExito) => {
+                        // Notificacion exitosa via Callback
+                        callbackCaja(true, "Pedido Entregado (" + mensajeExito + ")");
+                    })
+                    .catch((mensajeError) => {
+                        // Notificacion cancelada via Callback
+                        callbackCaja(false, "Pedido Cancelado (" + mensajeError + ")");
+                    });
+            }, 1500);
+
+        }, 1500);
+
+    }, 1500);
+}
+
+// Crear pedido
+function crearPedido(indice, cantidad) {
+    if (indice >= 0 && indice < productos.length) {
+        let producto = productos[indice];
+
+        if (cantidad > 0 && cantidad <= producto.cantidad) {
+            let pedido = {
+                producto: producto.nombre,
+                precio: producto.precio,
+                cantidad: cantidad
+            };
+
+            pedidos.push(pedido);
+            producto.cantidad = producto.cantidad - cantidad;
+
+            console.log("\nProcesando orden...");
+            
+            // Inicia flujo asincrono enlazado con la Caja (Callback)
+            seguimientoAsincronoPedido(producto.nombre, notificarCaja);
+
+        } else {
+            console.log("Cantidad no disponible.");
+            preguntarContinuar();
+        }
+    } else {
+        console.log("Producto no encontrado.");
+        preguntarContinuar();
+    }
+}
+
+// Listar pedidos del cliente
+function listarPedidos() {
+    console.log("\n===== MIS PEDIDOS =====");
+
+    if (pedidos.length == 0) {
+        console.log("No hay pedidos.");
+    } else {
+        pedidos.forEach((pedido, index) => {
+            let total = pedido.precio * pedido.cantidad;
+            console.log(
+                (index + 1) + ". " +
+                pedido.producto +
+                " x" + pedido.cantidad +
+                " - $" + total
+            );
+        });
+    }
+}
+
+
+// ==================================================
+// PARTE DE GAEL - CAJA
+// Investigar: Callbacks, reduce, destructuring
+// ==================================================
+
+// Callback para recibir notificacion de estados desde Cliente/Cocina
+function notificarCaja(exito, estadoFinal) {
+    console.log("\n==================================");
+    if (exito) {
+        console.log("NOTIFICACION CAJA: ¡PEDIDO LISTO!");
+        console.log("Detalle: " + estadoFinal);
+    } else {
+        console.log("NOTIFICACION CAJA: ¡PEDIDO CANCELADO!");
+        console.log("Detalle: " + estadoFinal);
+    }
+    console.log("==================================");
+    
+    preguntarContinuar();
+}
+
+// Mostrar caja con subtotal, IVA y total con reduce y destructuring
+function mostrarCaja() {
+    console.log("\n===== CAJA =====");
+
+    if (pedidos.length == 0) {
+        console.log("No hay pedidos registradas.");
+    } else {
+        // Destructuring en el recorrido
+        pedidos.forEach(({ producto, precio, cantidad }, index) => {
+            let subtotalLinea = precio * cantidad;
+            console.log(
+                (index + 1) + ". " +
+                producto +
+                " (x" + cantidad + ") - $" + subtotalLinea
+            );
+        });
+
+        // Calculo de total usando reduce y destructuring
+        let subtotal = pedidos.reduce((acumulado, { precio, cantidad }) => {
+            return acumulado + (precio * cantidad);
+        }, 0);
+
+        let iva = subtotal * 0.16;
+        let total = subtotal + iva;
+
+        console.log("----------------------------");
+        console.log("Subtotal: $" + subtotal);
+        console.log("IVA (16%): $" + iva);
+        console.log("Total a pagar: $" + total);
+    }
+}
+
+
+// ==================================================
+// CONTROL DE FLUJO
+// ==================================================
+
+function preguntarContinuar() {
+    rl.question("\n¿Deseas realizar otra operacion? (s/n): ", function(respuesta) {
+        if (respuesta.toLowerCase() === "s" || respuesta.toLowerCase() === "si") {
+            menu();
+        } else {
+            console.log("\nSaliendo del sistema...");
+            rl.close();
+        }
+    });
+}
+
+
+// ==================================================
+// MENU PRINCIPAL
+// ==================================================
+
+function menu() {
+
+    console.log(`
+=============================
+          CAFETERIA
+=============================
+
+1. Consultar productos y stock
+2. Ver promociones
+3. Crear pedido 
+4. Ver mis pedidos
+5. Ver caja 
+6. Búsquedas y Filtros 
+7. Agregar producto
+8. Editar producto
+9. Eliminar producto
+10. Salir
+`);
+
+    rl.question("Selecciona una opcion: ", function(opcion) {
+
+        if (opcion == "1") {
+            consultarProductos();
+            preguntarContinuar();
+
+        } else if (opcion == "2") {
+            verPromociones();
+            preguntarContinuar();
+
+        } else if (opcion == "3") {
+            consultarProductos();
+
+            rl.question("\nNumero del producto: ", function(numero) {
+                rl.question("Cantidad: ", function(cantidad) {
+                    crearPedido(
+                        parseInt(numero) - 1,
+                        parseInt(cantidad)
+                    );
+                });
+            });
+
+        } else if (opcion == "4") {
+            listarPedidos();
+            preguntarContinuar();
+
+        } else if (opcion == "5") {
+            mostrarCaja();
+            preguntarContinuar();
+
+        } else if (opcion == "6") {
+            busquedasFiltrosTerminal();
+
+        } else if (opcion == "7") {
+            rl.question("Nombre del producto: ", function(nombre) {
+                rl.question("Precio: ", function(precio) {
+                    rl.question("Cantidad: ", function(cantidad) {
+                        rl.question("Categoria (bebida/postre): ", function(categoria) {
+                            rl.question("¿Esta en promocion? (si/no): ", function(promo) {
+                                let esPromo = promo.toLowerCase() === "si" || promo.toLowerCase() === "s";
+
+                                agregarProducto(
+                                    nombre,
+                                    parseFloat(precio),
+                                    parseInt(cantidad),
+                                    categoria,
+                                    esPromo
+                                );
+                                preguntarContinuar();
+                            });
+                        });
+                    });
+                });
+            });
+
+        } else if (opcion == "8") {
+            listarProductos();
+
+            rl.question("\nNumero del producto a editar: ", function(numero) {
+                rl.question("Nuevo nombre: ", function(nombre) {
+                    rl.question("Nuevo precio: ", function(precio) {
+                        rl.question("Nueva cantidad: ", function(cantidad) {
+                            rl.question("Nueva categoria: ", function(categoria) {
+                                rl.question("¿En promocion? (si/no): ", function(promo) {
+                                    let esPromo = promo.toLowerCase() === "si" || promo.toLowerCase() === "s";
+
+                                    editarProducto(
+                                        parseInt(numero) - 1,
+                                        nombre,
+                                        parseFloat(precio),
+                                        parseInt(cantidad),
+                                        categoria,
+                                        esPromo
+                                    );
+                                    preguntarContinuar();
+                                });
+                            });
+                        });
+                    });
+                });
+            });
+
+        } else if (opcion == "9") {
+            listarProductos();
+
+            rl.question("\nNumero del producto a eliminar: ", function(numero) {
+                eliminarProducto(parseInt(numero) - 1);
+                preguntarContinuar();
+            });
+
+        } else if (opcion == "10") {
+            console.log("\nSaliendo del sistema...");
+            rl.close();
+
+        } else {
+            console.log("Opcion incorrecta.");
+            menu();
+        }
+    });
+}
+
+
+// ==================================================
+// INICIAR PROGRAMA
+// ==================================================
+
+menu();
