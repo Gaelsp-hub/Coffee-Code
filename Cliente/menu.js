@@ -29,6 +29,35 @@ function listarPedidos() {
     console.log(productos);
 }
 
+function procesarPedido() {
+
+    console.log("\n===== ESTADO DEL PEDIDO =====");
+
+    // Estado 1
+    console.log("Pedido recibido");
+
+    // Después de 2 segundos
+    setTimeout(() => {
+
+        console.log("Preparando.......");
+
+        // Después de otros 2 segundos
+        setTimeout(() => {
+
+            console.log("Empacando........");
+
+            // Después de otros 2 segundos
+            setTimeout(() => {
+
+                console.log("Pedido entregado");
+
+            }, 2000);
+
+        }, 2000);
+
+    }, 2000);
+}
+
 console.log("===== MENÚ CLIENTE =====");
 console.log("-----------------------------");
 console.log("1. Consultar productos");
